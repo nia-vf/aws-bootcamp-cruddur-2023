@@ -15,5 +15,6 @@ And here is an AWS IAM permission `ec2:DescribeInstances`
 This is a table.
 
 | Column 1 | Column 2 | Column 3 |
+| --- | --- | --- |
 | value 1a | value 2a | value 3a |
 | value 1b | value 2b | value 3b |
