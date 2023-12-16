@@ -39,3 +39,6 @@ Use to remove secrets in repository - https://rtyley.github.io/bfg-repo-cleaner/
 - `git reflog expire --expire=now --all && git gc --prune=now --aggressive`
 - Do `git push --force` (dangerous)
 - Drops commits containing secrets
+
+![image](https://github.com/nia-vf/aws-bootcamp-cruddur-2023/assets/102545622/8ecc47de-63af-41ef-a0c5-130650af6cf1)
+
