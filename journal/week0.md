@@ -29,6 +29,8 @@ We are going to learn how to scrub passwords from our repo, and to detect AWS Cr
 
 Identifies files that may have secrets - https://github.com/trufflesecurity/trufflehog
 
+- Run `brew install trufflesecurity/trufflehog/trufflehog`
+
 #### Use BFG
 
 Use to remove secrets in repository - https://rtyley.github.io/bfg-repo-cleaner/
