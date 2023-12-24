@@ -27,6 +27,11 @@ from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProces
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 
+# Amazon CloudWatch Logs --------------
+import watchtower
+import logging
+from time import strftime
+
 # HoneyComb ---------------------------
 # Initialize tracing and an exporter that can send data to Honeycomb
 provider = TracerProvider()
@@ -34,8 +39,18 @@ processor = BatchSpanProcessor(OTLPSpanExporter())
 provider.add_span_processor(processor)
 
 # AWS X-Ray ---------------------------
-xray_url = os.getenv("AWS_XRAY_URL")
-xray_recorder.configure(service='backend-flask', dynamic_naming=xray_url)
+# xray_url = os.getenv("AWS_XRAY_URL")
+# xray_recorder.configure(service='backend-flask', dynamic_naming=xray_url)
+
+# Amazon CloudWatch Logs --------------
+# Configuring Logger to Use CloudWatch
+# LOGGER = logging.getLogger(__name__)
+# LOGGER.setLevel(logging.DEBUG)
+# console_handler = logging.StreamHandler()
+# cw_handler = watchtower.CloudWatchLogHandler(log_group='cruddur')
+# LOGGER.addHandler(console_handler)
+# LOGGER.addHandler(cw_handler)
+# LOGGER.info("test log")
 
 # Show this is the logs within the backend-flask app (STDOUT)
 simple_processor = SimpleSpanProcessor(ConsoleSpanExporter())
@@ -47,7 +62,7 @@ tracer = trace.get_tracer(__name__)
 app = Flask(__name__)
 
 # AWS X-Ray ---------------------------
-XRayMiddleware(app, xray_recorder)
+# XRayMiddleware(app, xray_recorder)
 
 # HoneyComb ---------------------------
 # Initialize automatic instrumentation with Flask
@@ -64,6 +79,13 @@ cors = CORS(
   allow_headers="content-type,if-modified-since",
   methods="OPTIONS,GET,HEAD,POST"
 )
+
+# Amazon CloudWatch Logs --------------
+# @app.after_request
+# def after_request(response):
+#   timestamp = strftime('[%Y-%b-%d %H:%M]')
+#   LOGGER.error('%s %s %s %s %s %s', timestamp, request.remote_addr, request.method, request.scheme, request.full_path, response.status)
+#   return response
 
 @app.route("/api/message_groups", methods=['GET'])
 def data_message_groups():
@@ -102,7 +124,9 @@ def data_create_message():
 
 @app.route("/api/activities/home", methods=['GET'])
 def data_home():
-  data = HomeActivities.run()
+  data = HomeActivities.run(
+    #logger=LOGGER #(CloudWatch Logs specific)
+  )
   return data, 200
 
 @app.route("/api/activities/notifications", methods=['GET'])
