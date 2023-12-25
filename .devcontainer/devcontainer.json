@@ -18,8 +18,8 @@
 				"ms-python.python"
 			],
 			"settings": {
-				"terminal.integrated.fontSize": 20,
-				"editor.fontSize": 14
+				//"terminal.integrated.fontSize": 20,
+				//"editor.fontSize": 14
 			}
 		}
 	}
