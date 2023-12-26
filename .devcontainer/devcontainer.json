@@ -18,6 +18,7 @@
 				"ms-python.python"
 			],
 			"settings": {
+				"workbench.colorTheme": "GitHub Dark Default"
 				//"terminal.integrated.fontSize": 20,
 				//"editor.fontSize": 14
 			}
