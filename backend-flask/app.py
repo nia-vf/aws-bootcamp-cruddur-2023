@@ -45,8 +45,8 @@ processor = BatchSpanProcessor(OTLPSpanExporter())
 provider.add_span_processor(processor)
 
 # AWS X-Ray ---------------------------
-# xray_url = os.getenv("AWS_XRAY_URL")
-# xray_recorder.configure(service='backend-flask', dynamic_naming=xray_url)
+xray_url = os.getenv("AWS_XRAY_URL")
+xray_recorder.configure(service='backend-flask', dynamic_naming=xray_url)
 
 # Amazon CloudWatch Logs --------------
 # Configuring Logger to Use CloudWatch
@@ -68,7 +68,7 @@ tracer = trace.get_tracer(__name__)
 app = Flask(__name__)
 
 # AWS X-Ray ---------------------------
-# XRayMiddleware(app, xray_recorder)
+XRayMiddleware(app, xray_recorder)
 
 # HoneyComb ---------------------------
 # Initialize automatic instrumentation with Flask
