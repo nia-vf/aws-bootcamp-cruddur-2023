@@ -16,8 +16,8 @@ from services.create_message import *
 from services.show_activity import *
 
 # AWS Cognito
-from lib.cognito_jwt_token import CognitoJwtToken, extract_access_token
- 
+from lib.cognito_jwt_token import CognitoJwtToken, extract_access_token, TokenVerifyError
+
 # HoneyComb (OpenTelemetry) -----------
 from opentelemetry import trace
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
@@ -92,10 +92,8 @@ origins = [frontend, backend]
 cors = CORS(
   app, 
   resources={r"/api/*": {"origins": origins}},
-  # headers=['Content-Type', 'Authorization'], 
-  # expose_headers='Authorization',
-  expose_headers="location,link",
-  allow_headers="content-type,if-modified-since",
+  headers=['Content-Type', 'Authorization'], 
+  expose_headers='Authorization',
   methods="OPTIONS,GET,HEAD,POST"
 )
 
@@ -173,15 +171,19 @@ def data_home():
     claims = cognito_jwt_token.verify(access_token)
     # authenticated request
     app.logger.debug('authenticated')
-    app.logger.debug('claims', claims)
+    app.logger.debug(claims)
+    app.logger.debug(claims['username'])
+    data = HomeActivities.run(
+      cognito_user_id=claims['username']
+      #logger=LOGGER #(CloudWatch Logs specific)
+    )
   except TokenVerifyError as e:
     # unauthenticated request 
-     app.logger.debug('unauthenticated') 
-  
-  data = HomeActivities.run(
-    #logger=LOGGER #(CloudWatch Logs specific)
-  )
-  # claims = aws_auth.claims # also available through g.cognito_claims
+    app.logger.debug(e) 
+    app.logger.debug('unauthenticated')
+    data = HomeActivities.run(
+      #logger=LOGGER #(CloudWatch Logs specific)
+    )
   return data, 200
 
 @app.route("/api/activities/notifications", methods=['GET'])
