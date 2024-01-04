@@ -6,7 +6,6 @@ class CreateReply:
       'errors': None,
       'data': None
     }
-
     if user_handle == None or len(user_handle) < 1:
       model['errors'] = ['user_handle_blank']
 
