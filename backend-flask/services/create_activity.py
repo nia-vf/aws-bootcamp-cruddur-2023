@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from lib.db import db
 class CreateActivity:
-  def run(message, user_handle, ttl):
+  def run(message, user_handle, ttl, self):
     model = {
       'errors': None,
       'data': None
@@ -54,7 +54,7 @@ class CreateActivity:
       }
     return model
   
-  def create_activity(uuser_uuid, message, expires_at):
+  def create_activity(handle, message, expires_at):
     sql = """
     INSERT INTO (
       user_uuid,
@@ -62,10 +62,21 @@ class CreateActivity:
       expires_at
     )
     VALUES (
-      "{user_uuid}",
-      "{message}",
-      "{expires_at}"
-    )
+      (SELECT uuid 
+      FROM public.users 
+      WHERE users.handle = %(handle)s
+      LIMIT 1
+      ), 
+      %(message)s,
+      %(expires_at)s,
+      ) RETURNING uuid;
     """
-    #query_commit(sql)
+    uuid = db.query_commit_returning_id(
+      sql,
+      handle,
+      message,
+      expires_at              
+    )
+    
+  # def query_object_activity():
     
