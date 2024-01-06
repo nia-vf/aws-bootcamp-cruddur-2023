@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from lib.db import db
-import logging
 
 class CreateActivity:
   def run(message, user_handle, ttl):
@@ -47,8 +46,6 @@ class CreateActivity:
       
       object_json = CreateActivity.query_object_activity(uuid)
       model['data'] = object_json
-      
-    logging.info(user_handle)
     return model
   
   def create_activity(handle, message, expires_at):

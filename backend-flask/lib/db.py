@@ -63,23 +63,8 @@ class Db:
     except Exception as err:
       self.print_sql_err(err)
       #conn.rollback()
-      
-  # when we want to return a JSON object
-  def query_object_json(self, sql, params={}):
-    self.print_sql('json', sql)
-    self.print_params(params)
-    wrapped_sql = self.query_wrap_object(sql)
-
-    with self.pool.connection() as conn:
-      with conn.cursor() as cur:
-        cur.execute(wrapped_sql)
-        json = cur.fetchone()
-        if json == None:
-          "{}"
-        else:
-          return json[0]
-        
-  # when we want to eturn an array of JSON objects
+   
+  # when we want to return an array of JSON objects
   def query_array_json(self, sql, params={}):
     self.print_sql("array", sql) 
     wrapped_sql = self.query_wrap_array(sql)
@@ -89,6 +74,21 @@ class Db:
         cur.execute(wrapped_sql, params)
         json = cur.fetchone()
         return json[0]
+      
+  # when we want to return a JSON object
+  def query_object_json(self, sql, params={}):
+    self.print_sql('json', sql)
+    self.print_params(params)
+    wrapped_sql = self.query_wrap_object(sql)
+
+    with self.pool.connection() as conn:
+      with conn.cursor() as cur:
+        cur.execute(wrapped_sql, params)
+        json = cur.fetchone()
+        if json == None:
+          "{}"
+        else:
+          return json[0]
       
   def query_wrap_object(self, template):
     sql = f"""
