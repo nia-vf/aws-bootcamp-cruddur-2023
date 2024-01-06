@@ -1,65 +1,92 @@
 from psycopg_pool import ConnectionPool
 import os
-
-connection_url = os.getenv("CONNECTION_URL")
-pool = ConnectionPool(connection_url)
+import re
+import sys
+from flask import current_app as app
 
 class Db:
   def __init__(self):
     self.init_pool()
     
+  def template(self, *args):
+    pathing = list((app.root_path, 'db', 'sql',) + args)
+    pathing[-1] = pathing[-1] + ".sql"
+    
+    template_path = os.path.join(*pathing)
+    
+    green = '\033[92m'
+    no_color = '\033[0m'
+    print("\n")
+    print(f"{green} Load SQL Template: {template_path} {no_color}")
+    
+    with open(template_path, 'r')as f:
+      template_content = f.read()
+    return template_content
+    
   def init_pool(self):
     connection_url = os.getenv("CONNECTION_URL")
     self.pool = ConnectionPool(connection_url)
+
+  # formatting log output for SQL params
+  def print_params(self, params):
+    blue = '\033[94m'
+    no_color = '\033[0m'
+    print(f'{blue} SQL Params:{no_color}')
+    for key, value in params.items():
+      print(key, ":", value)
+  
+  # formatting log output for SQL query
+  def print_sql(self, title, sql):
+    cyan = '\033[96m'
+    no_colour = '\033[0m'
+    print(f"{cyan}SQL STATEMENT [{title}]--------{no_colour}")
+    print(sql)
+  
+  # we want to commit data such as INSERT
+  # be sure to check for RETURNING in all uppercase
+  def query_commit(self, sql, params={}):
+    self.print_sql('commit with returning', sql)
     
-  def query_commit_returning_id(self, sql, *args):
-    print("SQL STATEMENT [commit with returning]--------")
+    pattern = r"\bRETURNING\b"
+    is_returning_id = re.search(pattern, sql)
+
+
     try:
-      conn = self.pool.connection()
-      cur = conn.cursor()
-      cur.execute(sql, *args)
-      returning_id = cur.fetchone()[0]
-      conn.commit()
-    except Exception as err:
-      self.print_sql_err(err)
-      
-  def query_commit(self, sql):
-    try:
-      conn = self.pool.connection()
-      cur = conn.cursor()
-      cur.execute(sql)
-      conn.commit()
+      with self.pool.connection() as conn:
+        cur = conn.cursor()
+        cur.execute(sql, params)
+        if is_returning_id:
+          returning_id = cur.fetchone()[0]  
+        conn.commit()
+        if is_returning_id:
+          return returning_id
     except Exception as err:
       self.print_sql_err(err)
       #conn.rollback()
       
   # when we want to return a JSON object
-  def query_object_json(self, sql):
-    print("SQL STATEMENT [object]----------")
-    print(sql + "\n")
-    print("==------------------------------")
-    
+  def query_object_json(self, sql, params={}):
+    self.print_sql('json', sql)
+    self.print_params(params)
     wrapped_sql = self.query_wrap_object(sql)
+
     with self.pool.connection() as conn:
       with conn.cursor() as cur:
         cur.execute(wrapped_sql)
-        # this will return a tuple
-        # the first field being the data
         json = cur.fetchone()
-        return json[0]
+        if json == None:
+          "{}"
+        else:
+          return json[0]
         
   # when we want to eturn an array of JSON objects
-  def query_array_json(self, sql):
-    print("SQL STATEMENT [array]-----------")
-    print(sql)
-    print("==------------------------------")
-    
+  def query_array_json(self, sql, params={}):
+    self.print_sql("array", sql) 
     wrapped_sql = self.query_wrap_array(sql)
+    
     with self.pool.connection() as conn:
       with conn.cursor() as cur:
-        cur.execute(wrapped_sql)
-        # this will return a tuple
-        # the first field being the data
+        cur.execute(wrapped_sql, params)
         json = cur.fetchone()
         return json[0]
       
@@ -91,7 +118,7 @@ class Db:
     print ("psycopg traceback:", traceback, "--type:", err_type)
     
     # psycopg2 extensions.Diagnostics object attribute
-    print ("\nextensions.Diagnostics:", err.diag)
+    # print ("\nextensions.Diagnostics:", err.diag)
     
     # print the pgcode and pgerror exceptions
     print ("pgerror:", err.pgerror)
